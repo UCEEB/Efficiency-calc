@@ -15,18 +15,21 @@ levels = [ 0.05; 0.1; 0.2; 0.25; 0.3; 0.5; 0.75; 1 ];
 
 data = import_files( filename1, filename2 );
 
+% valid = abs(data.diff - median(data.diff)) < median(data.diff)/20;
+
 %% Extract levels
-h = histogram(data.CH1MPPW, 'BinMethod', 'sqrt');
+h = histogram(data.p1G2NarrowW(valid), 'BinMethod', 'sqrt');
 t = topkrows(h.Values', numel(levels));
 e = h.BinEdges( h.Values >= t(end) );
 
 % select data corresponding to expected levels
 select = false( numel(data.time), numel(levels) );
 % plot to check selected
-figure; hold on; plot( data.datetime, data.CH1MPPW, '.');
+figure; hold on;
+plot( data.datetime, data.p1G2NarrowW, '.');
 for i = 1 : numel(levels)
-    select(:,i) = ( data.CH1MPPW > e(i) ) & ( data.CH1MPPW < ( e(i) + h.BinWidth ) ) ;
-    plot(data.datetime( select(:,i) ), data.CH1MPPW( select(:,i) ), 'o')
+    select(:,i) = ( data.p1G2NarrowW > e(i) ) & ( data.p1G2NarrowW < ( e(i) + h.BinWidth ) ) & valid ;
+    plot(data.datetime( select(:,i) ), data.p1G2NarrowW( select(:,i) ), 'o')
 end
 legend( [ "original"; num2str(levels) ] );
 
@@ -47,3 +50,17 @@ euro = 0.03*ceff(1) + 0.06*ceff(2) + 0.13*ceff(3) + 0.1*ceff(5) + 0.48*ceff(6) +
 % CEC efficiency
 cec = 0.04*ceff(2) + 0.05*ceff(3) + 0.12*ceff(5) + 0.21*ceff(6) + 0.53*ceff(7) + 0.05*ceff(8);
 
+
+
+
+%% Test area
+magic = 20;
+limit = 5;
+grad1 = gradient(data.p1G2NarrowW);
+grad2 = gradient(data.p_SUMG1NarrowW);
+valid = ( abs(grad1 - median(grad1)) < limit );
+valid(1) = false;
+
+figure; hold on; plot( data.datetime(valid), data.CH1MPPW(valid), '.');
+plot( data.datetime(valid), data.p1G2NarrowW(valid), 'x');
+plot( data.datetime(valid), abs(data.p_SUMG1NarrowW(valid)), 'o');
