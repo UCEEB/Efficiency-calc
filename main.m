@@ -17,6 +17,14 @@ data = import_files( filename1, filename2 );
 
 % valid = abs(data.diff - median(data.diff)) < median(data.diff)/20;
 
+%% Prepare valid data
+magic = 20;
+limit = 5;
+grad1 = gradient(data.p1G2NarrowW);
+grad2 = gradient(data.p_SUMG1NarrowW);
+valid = ( abs(grad1 - median(grad1)) < limit );
+valid(1) = false;
+
 %% Extract levels
 h = histogram(data.p1G2NarrowW(valid), 'BinMethod', 'sqrt');
 t = topkrows(h.Values', numel(levels));
@@ -29,6 +37,9 @@ figure; hold on;
 plot( data.datetime, data.p1G2NarrowW, '.');
 for i = 1 : numel(levels)
     select(:,i) = ( data.p1G2NarrowW > e(i) ) & ( data.p1G2NarrowW < ( e(i) + h.BinWidth ) ) & valid ;
+    % select can contain holes - fill them
+    tmp = find(select(:,i));
+    select(:,i) = [ zeros(tmp(1)-1,1); ones(tmp(end)-tmp(1)+1,1); zeros(size(select(:,i), 1)-tmp(end),1) ];
     plot(data.datetime( select(:,i) ), data.p1G2NarrowW( select(:,i) ), 'o')
 end
 legend( [ "original"; num2str(levels) ] );
@@ -53,14 +64,8 @@ cec = 0.04*ceff(2) + 0.05*ceff(3) + 0.12*ceff(5) + 0.21*ceff(6) + 0.53*ceff(7) +
 
 
 
-%% Test area
-magic = 20;
-limit = 5;
-grad1 = gradient(data.p1G2NarrowW);
-grad2 = gradient(data.p_SUMG1NarrowW);
-valid = ( abs(grad1 - median(grad1)) < limit );
-valid(1) = false;
 
-figure; hold on; plot( data.datetime(valid), data.CH1MPPW(valid), '.');
-plot( data.datetime(valid), data.p1G2NarrowW(valid), 'x');
-plot( data.datetime(valid), abs(data.p_SUMG1NarrowW(valid)), 'o');
+
+% figure; hold on; plot( data.datetime(valid), data.CH1MPPW(valid), '.');
+% plot( data.datetime(valid), data.p1G2NarrowW(valid), 'x');
+% plot( data.datetime(valid), abs(data.p_SUMG1NarrowW(valid)), 'o');
